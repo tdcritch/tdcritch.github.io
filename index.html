@@ -308,6 +308,12 @@
                 if (rarity === 'All') button.classList.add('active-filter');
                 rarityFiltersContainer.appendChild(button);
             });
+            // Add Clear button
+            const clearButton = document.createElement('button');
+            clearButton.textContent = 'Clear';
+            clearButton.id = 'clear-filters-btn';
+            clearButton.className = `px-4 py-1.5 text-sm font-semibold rounded-md transition bg-gray-600 text-white border-2 border-gray-500 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-white`;
+            rarityFiltersContainer.appendChild(clearButton);
         }
         
         // Characters Page
@@ -443,7 +449,15 @@
             updateAutocomplete();
         });
         rarityFiltersContainer.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
+            if (e.target.tagName !== 'BUTTON') return;
+
+            if (e.target.id === 'clear-filters-btn') {
+                searchInput.value = '';
+                activeFilter = 'All';
+                document.querySelector('.active-filter')?.classList.remove('active-filter');
+                document.querySelector('button[data-rarity="All"]').classList.add('active-filter');
+                filterAndSearch();
+            } else if (e.target.classList.contains('filter-btn')) {
                 document.querySelector('.active-filter')?.classList.remove('active-filter');
                 e.target.classList.add('active-filter');
                 activeFilter = e.target.dataset.rarity;
@@ -481,4 +495,5 @@
 
 </body>
 </html>
+
 
