@@ -226,7 +226,7 @@
 
         // --- STATE ---
         let activeFilter = 'All';
-        const rarityOrder = ["Common", "Uncommon", "Legendary", "Boss", "Lunar", "Equipment", "All"];
+        const rarityOrder = ["Common", "Uncommon", "Legendary", "Boss", "Lunar", "Equipment"];
         const rarityColors = {
             Common: { border: 'border-gray-400', bg: 'bg-gray-700', text: 'text-white' },
             Uncommon: { border: 'border-green-400', bg: 'bg-green-800', text: 'text-green-300' },
@@ -234,7 +234,6 @@
             Boss: { border: 'border-yellow-400', bg: 'bg-yellow-800', text: 'text-yellow-300' },
             Lunar: { border: 'border-blue-400', bg: 'bg-blue-800', text: 'text-blue-300' },
             Equipment: { border: 'border-orange-400', bg: 'bg-orange-800', text: 'text-orange-300' },
-            All: { border: 'border-purple-400', bg: 'bg-purple-800', text: 'text-purple-300' },
         };
 
         // --- PAGE NAVIGATION ---
@@ -305,7 +304,6 @@
                 button.textContent = rarity;
                 button.dataset.rarity = rarity;
                 button.className = `filter-btn px-4 py-1.5 text-sm font-semibold rounded-md transition ${colors.bg} ${colors.text} ${colors.border} border-2 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-white`;
-                if (rarity === 'All') button.classList.add('active-filter');
                 rarityFiltersContainer.appendChild(button);
             });
             // Add Clear button
@@ -455,12 +453,16 @@
                 searchInput.value = '';
                 activeFilter = 'All';
                 document.querySelector('.active-filter')?.classList.remove('active-filter');
-                document.querySelector('button[data-rarity="All"]').classList.add('active-filter');
                 filterAndSearch();
             } else if (e.target.classList.contains('filter-btn')) {
-                document.querySelector('.active-filter')?.classList.remove('active-filter');
-                e.target.classList.add('active-filter');
-                activeFilter = e.target.dataset.rarity;
+                if (e.target.classList.contains('active-filter')) {
+                    e.target.classList.remove('active-filter');
+                    activeFilter = 'All';
+                } else {
+                    document.querySelector('.active-filter')?.classList.remove('active-filter');
+                    e.target.classList.add('active-filter');
+                    activeFilter = e.target.dataset.rarity;
+                }
                 filterAndSearch();
             }
         });
@@ -495,5 +497,6 @@
 
 </body>
 </html>
+
 
 
