@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk of Rain 2 Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+        }
+        .item-card, .char-card, .drone-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .item-card:hover, .char-card:hover, .drone-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        .nav-link {
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .nav-link.active {
+            background-color: #6b46c1; /* Purple */
+            color: white;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        #autocomplete-list::-webkit-scrollbar { display: none; }
+        #autocomplete-list { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white tracking-wider">Risk of Rain 2 Database</h1>
+            <p class="text-gray-400 mt-2">Your comprehensive guide to Items, Characters, and more.</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="bg-gray-800 rounded-xl shadow-lg mb-8 flex items-center justify-center p-2 gap-2 flex-wrap">
+            <a href="#" class="nav-link active px-4 py-2 rounded-md font-semibold" data-page="page-items">Items</a>
+            <a href="#" class="nav-link px-4 py-2 rounded-md font-semibold" data-page="page-characters">Characters</a>
+            <a href="#" class="nav-link px-4 py-2 rounded-md font-semibold" data-page="page-drones">Drones</a>
+            <a href="#" class="nav-link px-4 py-2 rounded-md font-semibold" data-page="page-builds">Builds</a>
+        </nav>
+
+        <!-- Page Content -->
+        <main id="main-content">
+            <!-- Items Page -->
+            <div id="page-items" class="page-content">
+                <!-- Search and Filter Controls -->
+                <div class="flex flex-col md:flex-row gap-4 mb-8 sticky top-4 bg-gray-900 bg-opacity-80 backdrop-blur-sm p-4 rounded-xl z-10 shadow-lg">
+                    <div class="relative flex-grow">
+                        <input type="text" id="search-input" placeholder="Search for an item..." class="w-full bg-gray-800 text-white placeholder-gray-500 border-2 border-gray-700 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                        <div id="autocomplete-list" class="absolute left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto hidden"></div>
+                    </div>
+                    <div id="rarity-filters" class="flex flex-wrap items-center justify-center gap-2">
+                        <!-- Filter buttons will be dynamically inserted here -->
+                    </div>
+                </div>
+                <!-- Item Grid -->
+                <div id="item-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+                    <!-- Item cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Characters Page -->
+            <div id="page-characters" class="page-content hidden">
+                 <div id="character-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Character cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Drones Page -->
+            <div id="page-drones" class="page-content hidden">
+                 <div id="drone-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Drone cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Builds Page -->
+            <div id="page-builds" class="page-content hidden">
+                <div id="builds-container" class="space-y-8">
+                   <!-- Build cards will be dynamically inserted here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+        <div id="modal-content" class="bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full transform transition-all opacity-0 scale-95 max-h-[90vh] overflow-y-auto">
+            <button id="close-modal" class="sticky top-4 right-4 float-right text-gray-400 hover:text-white transition z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div id="modal-body" class="p-8 pt-12"></div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- DATA ---
+        const items = [
+            // (Item data from previous version remains here, unchanged)
+            { name: "Soldier's Syringe", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/88/Soldier%27s_Syringe.png", description: "Increases attack speed.", stats: "Increases attack speed by 15% (+15% per stack)." },
+            { name: "Tougher Times", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/c/c3/Tougher_Times.png", description: "Chance to block incoming damage.", stats: "15% (+15% per stack) chance to block incoming damage. Proc chance stacks hyperbolically." },
+            { name: "Monster Tooth", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/7/79/Monster_Tooth.png", description: "Killing an enemy spawns a healing orb.", stats: "Killing an enemy spawns a healing orb that heals for 8 (+4 per stack) health." },
+            { name: "Lens-Maker's Glasses", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/5/53/Lens-Maker%27s_Glasses.png", description: "Your attacks have a chance to critically strike.", stats: "Your attacks have a 10% (+10% per stack) chance to Critically Strike, dealing double damage." },
+            { name: "Paul's Goat Hoof", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/b/b8/Paul%27s_Goat_Hoof.png", description: "Increases movement speed.", stats: "Increases movement speed by 14% (+14% per stack)." },
+            { name: "Bustling Fungus", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/a/a9/Bustling_Fungus.png", description: "Heals you after standing still for 1 second.", stats: "After standing still for 1 second, create a zone that heals for 4.5% (+2.25% per stack) of your maximum health every second to all allies within 3m (+1.5m per stack)." },
+            { name: "Crowbar", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/c/ce/Crowbar.png", description: "Deal more damage to healthy enemies.", stats: "Deal +75% (+75% per stack) damage to enemies above 90% health." },
+            { name: "Tri-Tip Dagger", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/a/a8/Tri-Tip_Dagger.png", description: "Chance to bleed enemies on hit.", stats: "10% (+10% per stack) chance to bleed an enemy for 240% base damage." },
+            { name: "Warbanner", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/f/f4/Warbanner.png", description: "Dropping a banner on level up empowers you.", stats: "On level up, drop a banner that strengthens all allies within 16m (+8m per stack). Raises attack and movement speed by 30%." },
+            { name: "Cautious Slug", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/0/06/Cautious_Slug.png", description: "Increases passive health regeneration.", stats: "Increases passive health regeneration by 300% (+300% per stack) while outside of combat." },
+            { name: "Personal Shield Generator", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/7/74/Personal_Shield_Generator.png", description: "Gain a recharging shield.", stats: "Gain a 25 (+25 per stack) health shield. Recharges when out of combat for 2 seconds." },
+            { name: "Medkit", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/2/2a/Medkit.png", description: "Receive a delayed heal after taking damage.", stats: "Heal for 25 (+25 per stack) health 1.1 seconds after getting hurt." },
+            { name: "Gasoline", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/44/Gasoline.png", description: "Killing an enemy ignites nearby enemies.", stats: "Killing an enemy ignites all enemies within 12m (+4m per stack) for 150% base damage. Additionally, enemies burn for 150% (+75% per stack) base damage." },
+            { name: "Stun Grenade", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/c/c9/Stun_Grenade.png", description: "Chance to stun enemies on hit.", stats: "5% (+5% per stack) chance on hit to stun an enemy for 2 seconds." },
+            { name: "Energy Drink", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/3a/Energy_Drink.png", description: "Sprint speed is improved.", stats: "Increases sprint speed by 25% (+25% per stack)." },
+            { name: "Backup Magazine", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/9/93/Backup_Magazine.png", description: "Add an extra charge of your Secondary skill.", stats: "Add +1 (+1 per stack) charge of your Secondary skill." },
+            { name: "Sticky Bomb", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/4f/Sticky_Bomb.png", description: "Chance on hit to attach a bomb to an enemy.", stats: "5% (+5% per stack) chance on hit to attach a bomb to an enemy, detonating for 180% TOTAL damage." },
+            { name: "Rusted Key", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/88/Rusted_Key.png", description: "A rusted key. It feels like it opens something...", stats: "Gain access to a Rusty Lockbox that contains a free item. Consumed on use. Spawns one box per key per stage." },
+            { name: "Armor-Piercing Rounds", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/1/13/Armor-Piercing_Rounds.png", description: "Deal extra damage to bosses.", stats: "Deal an additional 20% (+20% per stack) damage to bosses." },
+            { name: "Topaz Brooch", rarity: "Common", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/f/f6/Topaz_Brooch.png", description: "Gain a temporary barrier on kill.", stats: "Gain a 15 (+15 per stack) health temporary barrier on kill." },
+            { name: "AtG Missile Mk. 1", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/47/AtG_Missile_Mk._1.png", description: "Chance to fire a missile.", stats: "10% chance to fire a missile that deals 300% (+300% per stack) TOTAL damage." },
+            { name: "Will-o'-the-wisp", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/87/Will-o%27-the-wisp.png", description: "Detonate on killing an enemy.", stats: "On killing an enemy, spawn a lava pillar in a 12m (+2.4m per stack) radius for 350% (+280% per stack) base damage." },
+            { name: "Hopoo Feather", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/3a/Hopoo_Feather.png", description: "Gain an extra jump.", stats: "Gain +1 (+1 per stack) maximum jump count." },
+            { name: "Ukulele", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/b/b3/Ukulele.png", description: "Chance to fire chain lightning.", stats: "25% chance on hit to fire chain lightning for 80% TOTAL damage on up to 3 (+2 per stack) targets within 20m (+2m per stack)." },
+            { name: "Leeching Seed", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/8e/Leeching_Seed.png", description: "Dealing damage heals you.", stats: "Dealing damage heals you for 1 (+1 per stack) health." },
+            { name: "Predatory Instincts", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/3a/Predatory_Instincts.png", description: "Critical strikes increase attack speed.", stats: "Critical strikes increase attack speed by 12%. Stacks up to 36% (+24% per stack) attack speed." },
+            { name: "Red Whip", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/e/ec/Red_Whip.png", description: "Gain a burst of speed out of combat.", stats: "Increases movement speed by 30% (+30% per stack) while outside of combat." },
+            { name: "Old War Stealthkit", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/a/a4/Old_War_Stealthkit.png", description: "Chance to become invisible on taking heavy damage.", stats: "Chance on taking heavy damage to gain 40% movement speed and invisibility for 3s (+1.5s per stack)." },
+            { name: "Harvester's Scythe", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/2/23/Harvester%27s_Scythe.png", description: "Gain critical chance. Critical strikes heal you.", stats: "Gain 5% critical chance. Critical strikes heal for 8 (+4 per stack) health." },
+            { name: "Fuel Cell", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/2/2c/Fuel_Cell.png", description: "Hold an additional equipment charge. Reduce equipment cooldown.", stats: "Hold an additional equipment charge (+1 per stack). Reduce equipment cooldown by 15% (+15% per stack)." },
+            { name: "Infusion", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/5/53/Infusion.png", description: "Killing an enemy permanently increases your health.", stats: "Killing an enemy increases your health permanently by 1 (+1 per stack), up to a maximum of 100 (+100 per stack) health." },
+            { name: "Bandolier", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/2/29/Bandolier.png", description: "Chance on kill to drop an ammo pack.", stats: "18% chance on kill to drop an ammo pack that resets all skill cooldowns." },
+            { name: "Berzerker's Pauldron", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/8d/Berzerker%27s_Pauldron.png", description: "Enter a frenzy after killing 4 enemies in quick succession.", stats: "Killing 4 enemies within 1 second sends you into a frenzy for 6s (+4s per stack). Increases movement speed by 50% and attack speed by 100%." },
+            { name: "Rose Buckler", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/b/b8/Rose_Buckler.png", description: "Increase armor while sprinting.", stats: "Increase armor by 30 (+30 per stack) while sprinting." },
+            { name: "Runald's Band", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/9/91/Runald%27s_Band.png", description: "Hits that deal more than 400% damage also blast enemies with a runic ice blast.", stats: "Hits that deal more than 400% damage also blast enemies with a runic ice blast that slows them by 80% for 3s (+3s per stack) and deals 250% (+125% per stack) TOTAL damage." },
+            { name: "Kjaro's Band", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/e/e0/Kjaro%27s_Band.png", description: "Hits that deal more than 400% damage also blast enemies with a runic flame tornado.", stats: "Hits that deal more than 400% damage also blast enemies with a runic flame tornado that deals 300% (+150% per stack) TOTAL damage over 3s (+3s per stack)." },
+            { name: "Chronobauble", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/1/1b/Chronobauble.png", description: "Slow enemies on hit.", stats: "Slow enemies on hit for -60% movement speed for 2s (+2s per stack)." },
+            { name: "Wax Quail", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/44/Wax_Quail.png", description: "Jumping while sprinting boosts you forward.", stats: "Jumping while sprinting boosts you forward by 10m (+10m per stack)." },
+            { name: "Ghor's Tome", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/d/d4/Ghor%27s_Tome.png", description: "Chance on kill to drop a treasure.", stats: "4% (+4% on stack) chance on kill to drop a treasure." },
+            { name: "Squid Polyp", rarity: "Uncommon", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/7/73/Squid_Polyp.png", description: "Activating an interactable summons a Squid Turret.", stats: "Activating an interactable summons a Squid Turret that attacks enemies for 100% (+100% per stack) damage. Lasts 30 seconds." },
+            { name: "Brilliant Behemoth", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/3b/Brilliant_Behemoth.png", description: "All your attacks explode.", stats: "All your attacks explode in a 4m (+1.5m per stack) radius for a bonus 60% TOTAL damage to nearby enemies." },
+            { name: "Ceremonial Dagger", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/d/d5/Ceremonial_Dagger.png", description: "Killing an enemy releases homing daggers.", stats: "Killing an enemy fires out 3 homing daggers that deal 150% (+150% per stack) base damage." },
+            { name: "Frost Relic", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/87/Frost_Relic.png", description: "Killing an enemy surrounds you with an ice storm.", stats: "Killing an enemy surrounds you with an ice storm that deals 1200% damage per second and slows enemies by 80% for 1.5s. The storm grows with every kill, increasing its radius by 2m. Stacks up to 18m (+12m per stack)." },
+            { name: "Happiest Mask", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/d/d5/Happiest_Mask.png", description: "Chance to spawn a ghost of a killed enemy.", stats: "Killing an enemy has a 10% chance to spawn a ghost of the killed enemy with 1500% damage. Lasts 30s (+30s per stack)." },
+            { name: "H3AD-5T v2", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/9/97/H3AD-5T_v2.png", description: "Increase jump height. Crushing enemies deals damage.", stats: "Increase jump height. Creates a 10m radius kinetic explosion on hitting the ground, dealing 2300% base damage that scales up with fall distance. Recharges in 10 (-50% per stack) seconds." },
+            { name: "Nkuhana's Opinion", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/6/67/N%27kuhana%27s_Opinion.png", description: "Store healing as soul energy. Fire at enemies.", stats: "Store 100% of healing as Soul Energy. After your Soul Energy reaches 10% of your maximum health, fire a skull that deals 250% of your Soul Energy as damage." },
+            { name: "Unstable Tesla Coil", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/6/63/Unstable_Tesla_Coil.png", description: "Periodically shock nearby enemies.", stats: "Fire out lightning that hits 3 (+3 per stack) enemies for 200% base damage every 0.5s. The Tesla Coil switches off every 10 seconds." },
+            { name: "57 Leaf Clover", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/4b/57_Leaf_Clover.png", description: "Luck is on your side.", stats: "All random effects are rolled +1 (+1 per stack) times for a favorable outcome." },
+            { name: "Sentient Meat Hook", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/33/Sentient_Meat_Hook.png", description: "Chance to fire a homing hook at enemies.", stats: "20% (+20% per stack) chance on hit to fire homing hooks at up to 10 (+5 per stack) enemies for 100% TOTAL damage." },
+            { name: "Alien Head", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/3a/Alien_Head.png", description: "Reduce skill cooldowns.", stats: "Reduce skill cooldowns by 25% (+25% per stack)." },
+            { name: "Soulbound Catalyst", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/f/ff/Soulbound_Catalyst.png", description: "Kills reduce equipment cooldown.", stats: "Kills reduce equipment cooldowns by 4s (+2s per stack)." },
+            { name: "Dio's Best Friend", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/87/Dio%27s_Best_Friend.png", description: "Upon death, this item will be consumed and you will return to life.", stats: "Upon death, this item will be consumed and you will return to life with 3 seconds of invulnerability." },
+            { name: "Rejuvenation Rack", rarity: "Legendary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/1/13/Rejuvenation_Rack.png", description: "All healing is doubled.", stats: "All healing effects are increased by 100% (+100% per stack)." },
+            { name: "Titanic Knurl", rarity: "Boss", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/1/1b/Titanic_Knurl.png", description: "Boosts health and health regeneration.", stats: "Increase maximum health by 40 (+40 per stack) and health regeneration by 1.6 (+1.6 per stack) health per second." },
+            { name: "Queen's Gland", rarity: "Boss", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/a/a8/Queen%27s_Gland.png", description: "Summon a Beetle Guard.", stats: "Every 30 seconds, summon a Beetle Guard with bonus 300% damage and 100% health. Can have up to 1 (+1 per stack) Guards at a time." },
+            { name: "Genesis Loop", rarity: "Boss", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/7/77/Genesis_Loop.png", description: "Detonate when your health drops low.", stats: "When your health drops below 25%, release a Nova that deals 6000% base damage and stuns enemies. Recharges every 30 seconds (-50% per stack)." },
+            { name: "Little Disciple", rarity: "Boss", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/e/e0/Little_Disciple.png", description: "Fire a tracking wisp while sprinting.", stats: "Fire a tracking wisp for 300% (+300% per stack) damage while sprinting." },
+            { name: "Molten Perforator", rarity: "Boss", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/f/f9/Molten_Perforator.png", description: "Chance on hit to call forth magma balls.", stats: "10% chance on hit to call forth 3 magma balls from an enemy, dealing 300% (+300% per stack) damage each." },
+            { name: "Shaped Glass", rarity: "Lunar", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/31/Shaped_Glass.png", description: "Double your damage. Halve your health.", stats: "Increase base damage by 100% (+100% per stack). Reduce maximum health by 50% (+50% per stack). Stacks hyperbolically." },
+            { name: "Brittle Crown", rarity: "Lunar", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/c/c8/Brittle_Crown.png", description: "Gain gold on hit... but lose it on getting hit.", stats: "30% chance on hit to gain 2 (+2 per stack) gold. Lose gold equal to the amount of health you lost when hit, or lose all of your gold if you get hit for more than 25% of your maximum health." },
+            { name: "Transcendence", rarity: "Lunar", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/a/a5/Transcendence.png", description: "Convert all your health into regenerating shields.", stats: "Convert all but 1 health into regenerating shields. Increase maximum health by 50% (+25% per stack)." },
+            { name: "Corpsebloom", rarity: "Lunar", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/f/f3/Corpsebloom.png", description: "Double your healing. Apply it over time.", stats: "Heal +100% (+100% per stack) more. All healing is applied over time. Can heal for a maximum of 10% of your health per second." },
+            { name: "Gesture of the Drowned", rarity: "Lunar", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/c/c4/Gesture_of_the_Drowned.png", description: "Dramatically reduce Equipment cooldown. It automatically activates.", stats: "Reduce Equipment cooldown by 50% (+50% per stack). Forces your Equipment to activate whenever it is off cooldown." },
+            { name: "Disposable Missile Launcher", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/e/e3/Disposable_Missile_Launcher.png", description: "Fire a swarm of missiles.", stats: "Fire a swarm of 12 missiles that deal 12x300% damage. 45s Cooldown." },
+            { name: "Foreign Fruit", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/e/e7/Foreign_Fruit.png", description: "Instantly heal for 50% of your maximum health.", stats: "Instantly heal for 50% of your maximum health. 45s Cooldown." },
+            { name: "Primordial Cube", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/31/Primordial_Cube.png", description: "Fire a black hole that draws enemies in.", stats: "Fire a black hole that draws enemies in for 10 seconds. 60s Cooldown." },
+            { name: "Ocular HUD", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/5/52/Ocular_HUD.png", description: "Gain 100% Critical Strike Chance for 8 seconds.", stats: "Gain +100% Critical Strike Chance for 8s. 60s Cooldown." },
+            { name: "The Back-up", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/4c/The_Back-up.png", description: "Call 4 drones to fight for you.", stats: "Summon 4 strike drones to fight for you. 100s Cooldown." },
+            { name: "Preon Accumulator", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/f/f6/Preon_Accumulator.png", description: "Fires a devastating laser.", stats: "Fires a ball of energy that deals 6000% damage and collapses on itself. 140s Cooldown." },
+            { name: "Royal Capacitor", rarity: "Equipment", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/2/23/Royal_Capacitor.png", description: "Call down a lightning strike on a targeted foe.", stats: "Call down a lightning strike on a targeted monster, dealing 3000% damage and stunning it. 20s Cooldown." },
+        ];
+        const characters = [
+            { name: "Commando", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/7/79/Commando.png", tagline: "A jack-of-all-trades, the Commando is equipped to handle any situation.", health: "110 (+33 per level)", damage: "12 (+2.4 per level)", unlock: "Available by default." },
+            { name: "Huntress", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/33/Huntress.png", tagline: "The Huntress is a fragile but agile survivor with a high damage output.", health: "90 (+27 per level)", damage: "12 (+2.4 per level)", unlock: "Available by default." },
+            { name: "MUL-T", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/c/c5/MUL-T.png", tagline: "A versatile robotic powerhouse, MUL-T can swap between two primary weapons.", health: "200 (+60 per level)", damage: "11 (+2.2 per level)", unlock: "Beat the first stage 5 times." },
+            { name: "Engineer", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/38/Engineer.png", tagline: "The Engineer can place turrets to create a defensive perimeter.", health: "130 (+39 per level)", damage: "14 (+2.8 per level)", unlock: "Complete 30 stages." },
+            { name: "Artificer", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/b/b3/Artificer.png", tagline: "The Artificer is a high-damage caster who wields the elements of fire and ice.", health: "110 (+33 per level)", damage: "12 (+2.4 per level)", unlock: "Free her from the Newt Shop by spending 10 Lunar Coins." },
+            { name: "Mercenary", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/6/69/Mercenary.png", tagline: "The Mercenary is a high-skill melee survivor who uses his speed and invincibility frames to stay alive.", health: "110 (+33 per level)", damage: "12 (+2.4 per level)", unlock: "Obliterate yourself at the Obelisk." },
+            { name: "Rex", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/4/4d/Rex.png", tagline: "A half-plant, half-robot symbiote, REX uses its own health to cast devastating abilities.", health: "130 (+39 per level)", damage: "12 (+2.4 per level)", unlock: "Bring the Fuel Array from your escape pod to REX in the Abyssal Depths." },
+            { name: "Loader", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/3/33/Loader.png", tagline: "The Loader is a slow but powerful brawler who can use her grappling hook to quickly traverse the environment.", health: "160 (+48 per level)", damage: "12 (+2.4 per level)", unlock: "Defeat the Alloy Worship Unit in Siren's Call." },
+        ];
+        const drones = [
+            { name: "Healing Drone", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/b/b4/Healing_Drone.png", description: "Heals all nearby allies.", cost: "$25" },
+            { name: "Gunner Drone", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/b/be/Gunner_Drone.png", description: "Fires at nearby enemies.", cost: "$25" },
+            { name: "Missile Drone", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/a/a2/Missile_Drone.png", description: "Fires homing missiles at enemies.", cost: "$60" },
+            { name: "TC-280 Prototype", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/8/87/TC-280_Prototype.png", description: "A massive, powerful drone. Only found, not purchased.", cost: "N/A" },
+            { name: "Incinerator Drone", image: "https://vignette.wikia.nocookie.net/riskofrain2_gamepedia_en/images/1/18/Incinerator_Drone.png", description: "Burns nearby enemies.", cost: "$25" },
+        ];
+        const builds = [
+            { name: "On-Hit Overload", character: "Commando", description: "This build focuses on a high attack speed to trigger a massive amount of on-hit effects, overwhelming enemies with a constant stream of projectiles, bleeds, and lightning.", coreItems: ["Soldier's Syringe", "Tri-Tip Dagger", "Sticky Bomb", "Ukulele", "AtG Missile Mk. 1", "Sentient Meat Hook"] },
+            { name: "One-Shot Glass Cannon", character: "Artificer", description: "A high-risk, high-reward build that stacks damage multipliers to eliminate any enemy in a single, devastating blow. Requires careful positioning and resource management.", coreItems: ["Shaped Glass", "Crowbar", "Lens-Maker's Glasses", "Ocular HUD", "Runald's Band", "Kjaro's Band"] },
+            { name: "Immortal Fungus Engineer", character: "Engineer", description: "This defensive build centers around the Engineer's turrets and the Bustling Fungus. By staying within the healing zones, you and your turrets become nearly indestructible, whittling down enemies with constant fire.", coreItems: ["Bustling Fungus", "N'kuhana's Opinion", "Rejuvenation Rack", "Aegis"] },
+            { name: "Speed Demon Huntress", character: "Huntress", description: "Focuses on maximizing mobility to kite enemies and stay untouchable. Damage comes from stacking items that benefit a run-and-gun playstyle.", coreItems: ["Paul's Goat Hoof", "Energy Drink", "Red Whip", "Wax Quail", "Hopoo Feather", "Little Disciple"] },
+        ];
+
+        // --- DOM ELEMENTS ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pages = document.querySelectorAll('.page-content');
+        const modal = document.getElementById('item-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalBody = document.getElementById('modal-body');
+        const closeModalBtn = document.getElementById('close-modal');
+        
+        // Item Page Elements
+        const itemGrid = document.getElementById('item-grid');
+        const searchInput = document.getElementById('search-input');
+        const rarityFiltersContainer = document.getElementById('rarity-filters');
+        const autocompleteList = document.getElementById('autocomplete-list');
+
+        // Other Page Elements
+        const characterGrid = document.getElementById('character-grid');
+        const droneGrid = document.getElementById('drone-grid');
+        const buildsContainer = document.getElementById('builds-container');
+
+        // --- STATE ---
+        let activeFilter = 'All';
+        const rarityOrder = ["Common", "Uncommon", "Legendary", "Boss", "Lunar", "Equipment", "All"];
+        const rarityColors = {
+            Common: { border: 'border-gray-400', bg: 'bg-gray-700', text: 'text-white' },
+            Uncommon: { border: 'border-green-400', bg: 'bg-green-800', text: 'text-green-300' },
+            Legendary: { border: 'border-red-500', bg: 'bg-red-800', text: 'text-red-300' },
+            Boss: { border: 'border-yellow-400', bg: 'bg-yellow-800', text: 'text-yellow-300' },
+            Lunar: { border: 'border-blue-400', bg: 'bg-blue-800', text: 'text-blue-300' },
+            Equipment: { border: 'border-orange-400', bg: 'bg-orange-800', text: 'text-orange-300' },
+            All: { border: 'border-purple-400', bg: 'bg-purple-800', text: 'text-purple-300' },
+        };
+
+        // --- PAGE NAVIGATION ---
+        function showPage(pageId) {
+            pages.forEach(page => page.classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+
+            navLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.page === pageId);
+            });
+        }
+        
+        // --- MODAL LOGIC ---
+        function showModal(content) {
+            modalBody.innerHTML = content;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                modalContent.classList.remove('opacity-0', 'scale-95');
+                modalContent.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+
+        function hideModal() {
+            modalContent.classList.remove('opacity-100', 'scale-100');
+            modalContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }, 200);
+        }
+
+        // --- RENDER FUNCTIONS ---
+        // Items Page
+        function renderItems(filteredItems) {
+            itemGrid.innerHTML = '';
+            filteredItems.forEach(item => {
+                const rarityColor = rarityColors[item.rarity].border;
+                const card = document.createElement('div');
+                card.className = `item-card cursor-pointer bg-gray-800 rounded-lg overflow-hidden border-2 ${rarityColor} flex flex-col items-center p-2`;
+                card.innerHTML = `<img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-contain flex-grow" onerror="this.onerror=null;this.src='https://placehold.co/64x64/1a202c/ffffff?text=?';">`;
+                card.addEventListener('click', () => {
+                    const colors = rarityColors[item.rarity];
+                    const content = `
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="flex-shrink-0">
+                                 <img src="${item.image}" alt="${item.name}" class="w-32 h-32 rounded-lg border-4 ${colors.border} bg-gray-900 p-2" onerror="this.onerror=null;this.src='https://placehold.co/128x128/1a202c/ffffff?text=?';">
+                            </div>
+                            <div>
+                                <h2 class="text-3xl font-bold text-white">${item.name}</h2>
+                                <p class="font-semibold text-lg ${colors.text} mb-2">${item.rarity}</p>
+                                <p class="text-gray-300 mb-4">${item.description}</p>
+                                <div class="bg-gray-900 p-4 rounded-lg">
+                                    <p class="text-gray-400 font-mono">${item.stats}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                    showModal(content);
+                });
+                itemGrid.appendChild(card);
+            });
+        }
+
+        function createFilterButtons() {
+            rarityOrder.forEach(rarity => {
+                const colors = rarityColors[rarity];
+                const button = document.createElement('button');
+                button.textContent = rarity;
+                button.dataset.rarity = rarity;
+                button.className = `filter-btn px-4 py-1.5 text-sm font-semibold rounded-md transition ${colors.bg} ${colors.text} ${colors.border} border-2 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-white`;
+                if (rarity === 'All') button.classList.add('active-filter');
+                rarityFiltersContainer.appendChild(button);
+            });
+        }
+        
+        // Characters Page
+        function renderCharacters() {
+            characterGrid.innerHTML = '';
+            characters.forEach(char => {
+                const card = document.createElement('div');
+                card.className = 'char-card cursor-pointer bg-gray-800 rounded-lg overflow-hidden shadow-lg';
+                card.innerHTML = `
+                    <img src="${char.image}" alt="${char.name}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x300/1a202c/ffffff?text=${char.name}';">
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-white">${char.name}</h3>
+                    </div>
+                `;
+                 card.addEventListener('click', () => {
+                    const content = `
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                             <img src="${char.image}" alt="${char.name}" class="w-48 h-48 rounded-lg border-4 border-purple-500 bg-gray-900 p-2 flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/192x192/1a202c/ffffff?text=?';">
+                             <div class="space-y-4">
+                                <h2 class="text-4xl font-bold text-white">${char.name}</h2>
+                                <p class="text-purple-300 text-lg italic">"${char.tagline}"</p>
+                                <p class="text-gray-300">${char.unlock}</p>
+                                <div class="grid grid-cols-2 gap-4 bg-gray-900 p-4 rounded-lg text-sm">
+                                    <div><strong class="text-gray-400">Health:</strong> <span class="text-white">${char.health}</span></div>
+                                    <div><strong class="text-gray-400">Damage:</strong> <span class="text-white">${char.damage}</span></div>
+                                </div>
+                             </div>
+                        </div>`;
+                    showModal(content);
+                });
+                characterGrid.appendChild(card);
+            });
+        }
+        
+        // Drones Page
+        function renderDrones() {
+            droneGrid.innerHTML = '';
+            drones.forEach(drone => {
+                const card = document.createElement('div');
+                card.className = 'drone-card bg-gray-800 rounded-lg p-4 flex flex-col items-center text-center shadow-lg';
+                card.innerHTML = `
+                    <img src="${drone.image}" alt="${drone.name}" class="w-24 h-24 object-contain mb-4" onerror="this.onerror=null;this.src='https://placehold.co/96x96/1a202c/ffffff?text=?';">
+                    <h3 class="text-lg font-bold text-white">${drone.name}</h3>
+                    <p class="text-gray-400 text-sm">${drone.description}</p>
+                    <p class="text-yellow-400 font-semibold mt-2">${drone.cost}</p>
+                `;
+                droneGrid.appendChild(card);
+            });
+        }
+
+        // Builds Page
+        function renderBuilds() {
+            buildsContainer.innerHTML = '';
+            builds.forEach(build => {
+                const buildCard = document.createElement('div');
+                buildCard.className = 'bg-gray-800 rounded-xl p-6 shadow-lg';
+
+                const coreItemsHtml = build.coreItems.map(itemName => {
+                    const itemData = items.find(i => i.name === itemName);
+                    if (!itemData) return '';
+                    const colors = rarityColors[itemData.rarity];
+                    return `<div class="flex items-center gap-2 bg-gray-900 p-2 rounded-md">
+                                <img src="${itemData.image}" alt="${itemData.name}" class="w-8 h-8 border-2 ${colors.border} rounded" onerror="this.onerror=null;this.src='https://placehold.co/32x32/1a202c/ffffff?text=?';">
+                                <span class="font-semibold text-sm">${itemData.name}</span>
+                            </div>`;
+                }).join('');
+
+                buildCard.innerHTML = `
+                    <h3 class="text-2xl font-bold text-purple-400">${build.name}</h3>
+                    <p class="text-gray-400 mb-2 font-semibold">Character: ${build.character}</p>
+                    <p class="text-gray-300 mb-4">${build.description}</p>
+                    <h4 class="font-bold mb-2 text-white">Core Items:</h4>
+                    <div class="flex flex-wrap gap-2">${coreItemsHtml}</div>
+                `;
+                buildsContainer.appendChild(buildCard);
+            });
+        }
+
+
+        // --- FILTER & SEARCH (ITEMS) ---
+        function filterAndSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            let filteredItems = items;
+
+            if (activeFilter !== 'All') {
+                filteredItems = filteredItems.filter(item => item.rarity === activeFilter);
+            }
+
+            if (searchTerm) {
+                filteredItems = filteredItems.filter(item => item.name.toLowerCase().includes(searchTerm));
+            }
+
+            renderItems(filteredItems);
+        }
+        
+        function updateAutocomplete() {
+            const searchTerm = searchInput.value.toLowerCase();
+            autocompleteList.innerHTML = '';
+            if (!searchTerm) {
+                autocompleteList.classList.add('hidden');
+                return;
+            }
+            const matchingItems = items.filter(item => item.name.toLowerCase().includes(searchTerm)).slice(0, 5);
+            if (matchingItems.length > 0) {
+                matchingItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.textContent = item.name;
+                    div.className = 'p-2 hover:bg-purple-600 cursor-pointer';
+                    div.onclick = () => {
+                        searchInput.value = item.name;
+                        autocompleteList.classList.add('hidden');
+                        filterAndSearch();
+                    };
+                    autocompleteList.appendChild(div);
+                });
+                autocompleteList.classList.remove('hidden');
+            } else {
+                autocompleteList.classList.add('hidden');
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage(link.dataset.page);
+            });
+        });
+
+        // Item Page Listeners
+        searchInput.addEventListener('input', () => {
+            filterAndSearch();
+            updateAutocomplete();
+        });
+        rarityFiltersContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                document.querySelector('.active-filter')?.classList.remove('active-filter');
+                e.target.classList.add('active-filter');
+                activeFilter = e.target.dataset.rarity;
+                filterAndSearch();
+            }
+        });
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+                autocompleteList.classList.add('hidden');
+            }
+        });
+        
+        // Modal Listeners
+        closeModalBtn.addEventListener('click', hideModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) hideModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && !modal.classList.contains('hidden')) hideModal();
+        });
+        
+        // --- INITIALIZATION ---
+        function initialize() {
+            createFilterButtons();
+            renderItems(items);
+            renderCharacters();
+            renderDrones();
+            renderBuilds();
+            showPage('page-items');
+        }
+
+        initialize();
+
+    </script>
+
+</body>
+</html>
+
